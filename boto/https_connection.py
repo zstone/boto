@@ -75,8 +75,12 @@ def ValidateCertificateHostname(cert, hostname):
   for host in hosts:
     host_re = host.replace('.', '\.').replace('*', '[^.]*')
     if re.search('^%s$' % (host_re,), hostname, re.I):
+      boto.log.debug("*"*79)
+      boto.log.debug("*** hostname %s is valid for this certificate! (hosts: %s) ***" % (hostname, str(', '.join(hosts))))
+      boto.log.debug("*"*79)
       return True
-  return False
+  raise Exception("*** ERROR: hostname %s is NOT VALID for this certificate! (hosts: %s) ***" % (hostname, str(', '.join(hosts))))
+  # return False
 
 
 class CertValidatingHTTPSConnection(httplib.HTTPConnection):
@@ -120,5 +124,7 @@ class CertValidatingHTTPSConnection(httplib.HTTPConnection):
                                         cert,
                                         'remote hostname "%s" does not match '\
                                         'certificate' % hostname)
-
-
+    else:
+      boto.log.debug("*"*79)
+      boto.log.debug("*** Validated SSL connection with hostname %s in https_connection.py ***" % hostname)
+      boto.log.debug("*"*79)

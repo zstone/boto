@@ -78,6 +78,9 @@ try:
 except ImportError:
     pass
 
+if not HAVE_HTTPS_CONNECTION == True:
+    raise Exception("Insufficient SSL support")
+
 try:
     import threading
 except ImportError:
@@ -416,8 +419,12 @@ class AWSAuthConnection(object):
         self.is_secure = is_secure
         # Whether or not to validate server certificates.  At some point in the
         # future, the default should be flipped to true.
-        self.https_validate_certificates = config.getbool(
-                'Boto', 'https_validate_certificates', False)
+        # self.https_validate_certificates = config.getbool(
+        #        'Boto', 'https_validate_certificates', False)
+
+        # Always validate server SSL certificates!
+        self.https_validate_certificates = True
+
         if self.https_validate_certificates and not HAVE_HTTPS_CONNECTION:
             raise BotoClientError(
                     "SSL server certificate validation is enabled in boto "
@@ -447,7 +454,9 @@ class AWSAuthConnection(object):
         if (is_secure):
             self.protocol = 'https'
         else:
-            self.protocol = 'http'
+            # self.protocol = 'http'
+            raise Exception("ERROR: Attempting to connect insecurely over http")
+
         self.host = host
         self.path = path
         if isinstance(debug, (int, long)):
@@ -676,13 +685,18 @@ class AWSAuthConnection(object):
             if not https_connection.ValidateCertificateHostname(cert, hostname):
                 raise https_connection.InvalidCertificateException(
                         hostname, cert, 'hostname mismatch')
-        else:
-            # Fallback for old Python without ssl.wrap_socket
-            if hasattr(httplib, 'ssl'):
-                sslSock = httplib.ssl.SSLSocket(sock)
             else:
-                sslSock = socket.ssl(sock, None, None)
-                sslSock = httplib.FakeSocket(sock, sslSock)
+                boto.log.debug("*"*79)
+                boto.log.debug("*** Validated SSL connection in proxy_ssl with hostname %s ***" % hostname)
+                boto.log.debug("*"*79)
+        else:
+            raise Exception("ERROR: Unable to make a secure connection")
+            # # Fallback for old Python without ssl.wrap_socket
+            # if hasattr(httplib, 'ssl'):
+            #     sslSock = httplib.ssl.SSLSocket(sock)
+            # else:
+            #     sslSock = socket.ssl(sock, None, None)
+            #     sslSock = httplib.FakeSocket(sock, sslSock)
 
         # This is a bit unclean
         h.sock = sslSock
