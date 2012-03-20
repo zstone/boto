@@ -686,9 +686,9 @@ class AWSAuthConnection(object):
                 raise https_connection.InvalidCertificateException(
                         hostname, cert, 'hostname mismatch')
             else:
-                boto.log.debug("*"*79)
-                boto.log.debug("*** Validated SSL connection in proxy_ssl with hostname %s ***" % hostname)
-                boto.log.debug("*"*79)
+                boto.log.info("*"*79)
+                boto.log.info("*** Validated SSL connection in proxy_ssl with hostname %s ***" % hostname)
+                boto.log.info("*"*79)
         else:
             raise Exception("ERROR: Unable to make a secure connection")
             # # Fallback for old Python without ssl.wrap_socket
